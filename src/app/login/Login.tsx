@@ -8,6 +8,7 @@ import {
   Input,
   Line,
   PasswordInput,
+  RevealFx,
   Row,
   SmartLink,
   useToast,
@@ -68,89 +69,95 @@ export default function Login() {
   }
 
   return (
-    <Column vertical="center">
-      <Column
-        fillWidth
-        horizontal="center"
-        gap="20"
-        padding="32"
-        position="relative"
-      >
-        <Background
-          mask={{
-            x: 100,
-            y: 0,
-            radius: 75,
-          }}
-          position="absolute"
-          grid={{
-            display: true,
-            opacity: 50,
-            width: "0.5rem",
-            color: "neutral-background-alpha",
-            height: "1rem",
-          }}
-        />
-        {/*TODO: Add logo here */}
-        {/* <Logo wordmark={false} size="l" /> */}
-        <Heading as="h3" variant="display-default-s" align="center">
-          Welcome to NoteConnect
-        </Heading>
-        <p className="mb-24">
-          Log in or
-          <SmartLink href="/">sign up</SmartLink>
-        </p>
-        <Column fillWidth gap="8">
-          <Button
-            label="Continue with Google"
-            fillWidth
-            variant="secondary"
-            weight="default"
-            prefixIcon="google"
-            size="l"
-            disabled={loading}
-            onClick={async () => {
-              await authClient.signIn.social({
-                provider: "google",
-
-                callbackURL: "/",
-              });
+    <RevealFx speed="medium" delay={0} translateY={0}>
+      <Column vertical="center">
+        <Column
+          fillWidth
+          horizontal="center"
+          gap="20"
+          padding="32"
+          position="relative"
+        >
+          <Background
+            mask={{
+              x: 100,
+              y: 0,
+              radius: 75,
+            }}
+            position="absolute"
+            grid={{
+              display: true,
+              opacity: 50,
+              width: "0.5rem",
+              color: "neutral-background-alpha",
+              height: "1rem",
             }}
           />
-        </Column>
-        <Row fillWidth paddingY="24">
-          <Row onBackground="neutral-weak" fillWidth gap="24" vertical="center">
-            <Line />/<Line />
+          {/*TODO: Add logo here */}
+          {/* <Logo wordmark={false} size="l" /> */}
+          <Heading as="h3" variant="display-default-s" align="center">
+            Welcome to NoteConnect
+          </Heading>
+          <p className="mb-24">
+            Log in or
+            <SmartLink href="/">sign up</SmartLink>
+          </p>
+          <Column fillWidth gap="8">
+            <Button
+              label="Continue with Google"
+              fillWidth
+              variant="secondary"
+              weight="default"
+              prefixIcon="google"
+              size="l"
+              disabled={loading}
+              onClick={async () => {
+                await authClient.signIn.social({
+                  provider: "google",
+                  callbackURL: "/",
+                });
+              }}
+            />
+          </Column>
+          <Row fillWidth paddingY="24">
+            <Row
+              onBackground="neutral-weak"
+              fillWidth
+              gap="24"
+              vertical="center"
+            >
+              <Line />/<Line />
+            </Row>
           </Row>
-        </Row>
-        <Column gap="-1" fillWidth>
-          <Input
-            id="email"
-            label="Email"
-            labelAsPlaceholder
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
-            errorMessage={false}
-            radius="top"
-          />
-          <PasswordInput
-            autoComplete="new-password"
-            id="password"
-            label="Password"
-            labelAsPlaceholder
-            radius="bottom"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
+          <Column gap="-1" fillWidth>
+            <Input
+              id="email"
+              label="Email"
+              labelAsPlaceholder
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              errorMessage={false}
+              radius="top"
+            />
+            <PasswordInput
+              autoComplete="new-password"
+              id="password"
+              label="Password"
+              labelAsPlaceholder
+              radius="bottom"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+            />
+          </Column>
+          <Button
+            id="login"
+            label="Log in"
+            arrowIcon
+            fillWidth
+            onClick={handleSubmit}
           />
         </Column>
-        <Button
-          id="login"
-          label="Log in"
-          arrowIcon
-          fillWidth
-          onClick={handleSubmit}
-        />
       </Column>
-    </Column>
+    </RevealFx>
   );
 }
