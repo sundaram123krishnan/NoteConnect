@@ -1,12 +1,20 @@
 import { Heading, Button, Fade, Row, Column } from "@/once-ui/components";
 import Link from "next/link";
+import { auth } from "../../../lib/auth";
+import { headers } from "next/headers";
+import SignOutButton from "@/app/login/SignOutButton";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
   return (
     <Column
       fillWidth
       paddingY="40"
       paddingX="s"
+      paddingRight="l"
       horizontal="center"
       flex={1}
       zIndex={10}
@@ -36,12 +44,24 @@ export default function Navbar() {
           <Heading weight="strong" as="h2" wrap="balance" align="center">
             <Link href="/">NoteConnect</Link>
           </Heading>
-          <Row gap="12" hide="s">
-            <Button href="/login">Login</Button>
-          </Row>
-          <Row gap="16" show="s" horizontal="center" paddingRight="24">
-            <Button href="/login">Login</Button>
-          </Row>
+          {session !== null ? (
+            <Row gap="12" hide="s">
+              <SignOutButton />
+            </Row>
+          ) : (
+            <Row gap="12" hide="s">
+              <Button href="/login">Login</Button>
+            </Row>
+          )}
+          {session !== null ? (
+            <Row gap="12" show="s">
+              <SignOutButton />
+            </Row>
+          ) : (
+            <Row gap="12" show="s">
+              <Button href="/login">Login</Button>
+            </Row>
+          )}
         </Row>
       </Row>
     </Column>

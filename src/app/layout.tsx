@@ -132,7 +132,7 @@ export default function RootLayout({
         />
       </head>
       <ToastProvider>
-        <Column as="body" fillWidth margin="0" padding="0">
+        <Column as="body" fillWidth margin="0" padding="0" vertical="center">
           <Background
             position="absolute"
             mask={{
@@ -170,6 +170,7 @@ export default function RootLayout({
               paddingX="s"
               fillWidth
               zIndex={10}
+              center
             >
               {children}
             </Column>
