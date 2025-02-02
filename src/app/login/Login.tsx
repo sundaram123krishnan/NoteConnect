@@ -1,15 +1,12 @@
 "use client";
+
 import {
   Background,
   Button,
-  Card,
   Column,
-  DateRange,
-  Flex,
   Heading,
   Input,
   Line,
-  Logo,
   PasswordInput,
   Row,
   SmartLink,
