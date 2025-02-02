@@ -2,7 +2,7 @@ import { Heading, Button, Fade, Row, Column } from "@/once-ui/components";
 import Link from "next/link";
 import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
-import SignOutButton from "@/app/login/SignOutButton";
+import SignOutButton from "@/app/login/UserProfile";
 
 export default async function Navbar() {
   const session = await auth.api.getSession({
@@ -40,6 +40,7 @@ export default async function Navbar() {
           maxWidth="l"
           paddingLeft="32"
           paddingY="20"
+          vertical="center"
         >
           <Heading weight="strong" as="h2" wrap="balance" align="center">
             <Link href="/">NoteConnect</Link>
