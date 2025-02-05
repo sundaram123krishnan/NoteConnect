@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  notes         Notes[]
 
   @@unique([email])
   @@map("user")
@@ -66,4 +67,17 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+model Notes {
+  id        String   @id @default(cuid())
+  category  String[]
+  college   String
+  state     String
+  district  String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  notesLink String
+
+  @@map("notes")
 }
