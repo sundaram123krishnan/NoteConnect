@@ -70,14 +70,15 @@ model Verification {
 }
 
 model Notes {
-  id        String   @id @default(cuid())
-  category  String[]
-  college   String
-  state     String
-  district  String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  notesLink String
+  id         String   @id @default(cuid())
+  title      String
+  categories String[]
+  college    String
+  state      String
+  district   String
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  notesLink  String
 
   @@map("notes")
 }
