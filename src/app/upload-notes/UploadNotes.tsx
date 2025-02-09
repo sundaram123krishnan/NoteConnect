@@ -1,29 +1,54 @@
 "use client";
 
 import {
+  Badge,
+  Button,
   Card,
   Column,
+  Flex,
+  Grid,
   Input,
   RevealFx,
   Select,
+  SmartImage,
   Text,
   useToast,
 } from "@/once-ui/components";
 import { Districts, States } from "./data";
-import { useEffect, useState } from "react";
-import MultiUploader from "./uploadButton";
+import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
+import { useUploadThing } from "@/utils/uploadThing";
+import { useDropzone } from "@uploadthing/react";
+import {
+  generateClientDropzoneAccept,
+  generatePermittedFileTypes,
+} from "uploadthing/client";
+import { UploadNotesAction } from "./upload-action";
+import { Caesar_Dressing } from "next/font/google";
 
 const NotesSchema = z.object({
-  title: z.string(),
-  state: z.string(),
-  district: z.string(),
-  categories: z.array(z.string()),
-  colleges: z.array(z.string()),
+  title: z.string().nonempty("Title is required"),
+  state: z.string().nonempty("State is required"),
+  district: z.string().nonempty("District is required"),
+  categories: z.array(z.string()).nonempty("At least one category is required"),
+  collegeName: z.string().nonempty("College is required"),
+  fileUrl: z.string().url("Valid file URL is required"),
 });
 
 export function UploadNotes() {
   const { addToast } = useToast();
+
+  const [state, setState] = useState("");
+  const [district, setDistrict] = useState("");
+  const [colleges, setColleges] = useState([]);
+  const [selectedCollege, setSelectedCollege] = useState("");
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<z.ZodIssue[]>([]);
 
   async function fetchColleges(state: string, district: string) {
     const response = await fetch(
@@ -40,12 +65,6 @@ export function UploadNotes() {
 
     setColleges(collegeList);
   }
-
-  const [state, setState] = useState("");
-  const [district, setDistrict] = useState("");
-  const [colleges, setColleges] = useState([]);
-  const [selectedCollege, setSelectedCollege] = useState("");
-  const [title, setTitle] = useState("");
 
   function selectState(value: string) {
     setSelectedCollege("");
@@ -65,20 +84,135 @@ export function UploadNotes() {
     setSelectedCollege(value);
   }
 
+  function addCategory() {
+    setCategories([...categories, category]);
+    setCategory("");
+  }
+
+  function removeCategory(index: number) {
+    const removedCategories = categories.filter((_, i) => i !== index);
+    setCategories(removedCategories);
+  }
+
+  const handleServerUpload = useCallback(
+    async (fileUrl: string) => {
+      const notes = {
+        title,
+        state,
+        district,
+        categories,
+        collegeName: selectedCollege,
+        fileUrl,
+      };
+
+      const result = NotesSchema.safeParse(notes);
+
+      if (!result.success) {
+        setFormErrors(result.error.issues);
+        setUploadStatus("Validation failed");
+        addToast({
+          message: "Please fill all required fields",
+          variant: "danger",
+        });
+        setLoading(false);
+        return;
+      }
+      setFormErrors([]);
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("state", state);
+      formData.append("district", district);
+      formData.append("collegeName", selectedCollege);
+      formData.append("categories", JSON.stringify(categories));
+      formData.append("fileUrl", fileUrl);
+      try {
+        const uploadResponse = await UploadNotesAction(formData);
+        setUploadStatus("Upload successful");
+        addToast({
+          message: "Successfully uploaded notes",
+          variant: "success",
+        });
+        setState("");
+        setDistrict("");
+        setSelectedCollege("");
+        setTitle("");
+        setFile(null);
+        setCategories([]);
+        setUploadStatus("");
+      } catch (error) {
+        setUploadStatus("Upload failed");
+        addToast({
+          message: "Error uploading notes",
+          variant: "danger",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [title, selectedCollege, state, district, categories, addToast]
+  );
+
+  const { startUpload, routeConfig } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res) => {
+      const fileUrl = res[0].appUrl;
+      handleServerUpload(fileUrl);
+    },
+    onUploadError: () => {
+      setUploadStatus("Upload failed");
+      setLoading(false);
+      addToast({
+        variant: "danger",
+        message: "Upload failed",
+      });
+    },
+    onUploadBegin: () => {
+      console.log("Upload has begun for", file?.name);
+      setLoading(true);
+      setUploadStatus(null);
+    },
+  });
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setFile(acceptedFiles[0] || null);
+    setUploadStatus(null);
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: generateClientDropzoneAccept(
+      generatePermittedFileTypes(routeConfig).fileTypes
+    ),
+    multiple: false,
+  });
+
+  const handleUploadFile = useCallback(() => {
+    if (file) {
+      startUpload([file]);
+    }
+  }, [file, startUpload]);
+
   return (
     <RevealFx speed="medium" delay={0} translateY={0}>
-      <Column>
+      <Column fillWidth>
         <Card
           radius="l-4"
           direction="column"
           gap="16"
-          horizontal="center"
           padding="16"
-          height={40}
-          background="brand-medium"
+          height={44}
           fillWidth
+          background="transparent"
+          border="transparent"
         >
-          <Text variant="body-strong-xl">Upload Notes</Text>
+          <Flex direction="row" gap="4" horizontal="space-between" center>
+            <SmartImage
+              src="/images/image.png"
+              alt="Image description"
+              width={4}
+              height={4}
+            />
+            <Text variant="body-strong-xl">Upload Notes</Text>
+          </Flex>
           <Input
             id="title"
             label="Enter title"
@@ -106,12 +240,62 @@ export function UploadNotes() {
             value={selectedCollege}
             onSelect={selectColleges}
           />
-          <MultiUploader
-            title={title}
-            collegeName={selectedCollege}
-            state={state}
-            district={district}
-          />
+          <Flex center gap="4">
+            <Input
+              id="categories"
+              label="Add categories"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+            <Button
+              variant="tertiary"
+              size="l"
+              prefixIcon="plus"
+              onClick={addCategory}
+            />
+          </Flex>
+
+          <Flex>
+            {categories.length > 0 ? (
+              <Grid gap="4" columns="4">
+                {categories.map((category, index) => (
+                  <Badge key={index} onClick={() => removeCategory(index)}>
+                    {category}
+                  </Badge>
+                ))}
+              </Grid>
+            ) : (
+              <></>
+            )}
+          </Flex>
+          {formErrors.find((error) => error.path[0] === "categories") && (
+            <Text color="danger">
+              {
+                formErrors.find((error) => error.path[0] === "categories")
+                  ?.message
+              }
+            </Text>
+          )}
+          <Flex direction="column" gap="8">
+            <div {...getRootProps()}>
+              <input {...getInputProps()} />
+              <Button>Select file</Button>
+            </div>
+            {file && (
+              <Flex direction="column" gap="8">
+                <Flex gap="4">
+                  <Text>{file.name}</Text>
+                </Flex>
+                <Button
+                  onClick={handleUploadFile}
+                  loading={loading}
+                  disabled={!file || loading}
+                >
+                  Upload
+                </Button>
+              </Flex>
+            )}
+          </Flex>
         </Card>
       </Column>
     </RevealFx>

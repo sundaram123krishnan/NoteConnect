@@ -9,9 +9,10 @@ export async function UploadNotesAction(formData: FormData) {
     const user = await auth.api.getSession({
       headers: await headers(),
     });
-
     if (!user || !user.session || !user.session.id) {
-      throw new Error("User not authenticated");
+      return {
+        message: "Please Login to upload notes",
+      };
     }
 
     const title = formData.get("title") as string;
@@ -22,7 +23,9 @@ export async function UploadNotesAction(formData: FormData) {
     const categories = JSON.parse(formData.get("categories") as string);
 
     if (!title || !state || !collegeName || !district || !fileUrl) {
-      throw new Error("Missing required fields");
+      return {
+        message: "Please fill out add details",
+      };
     }
 
     const newNote = await prisma.notes.create({
@@ -46,6 +49,7 @@ export async function UploadNotesAction(formData: FormData) {
     };
   } catch (error) {
     if (error instanceof Error) {
+      console.log(error.message);
       return { error: error.message };
     } else {
       return { error: "An unknown error occurred" };
