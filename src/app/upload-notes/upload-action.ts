@@ -19,20 +19,11 @@ export async function UploadNotesAction(formData: FormData) {
     const collegeName = formData.get("collegeName") as string;
     const district = formData.get("district") as string;
     const fileUrl = formData.get("fileUrl") as string;
+    const categories = JSON.parse(formData.get("categories") as string);
 
     if (!title || !state || !collegeName || !district || !fileUrl) {
       throw new Error("Missing required fields");
     }
-
-    console.log("Attempting to create note with data:", {
-      title,
-      state,
-      district,
-      college: collegeName,
-      notesLink: fileUrl,
-      userId: user.session.id,
-    });
-    console.log(user.user.id);
 
     const newNote = await prisma.notes.create({
       data: {
@@ -46,18 +37,14 @@ export async function UploadNotesAction(formData: FormData) {
             id: user.user.id,
           },
         },
-        categories: ["engineering", "medical"],
+        categories,
       },
     });
 
-    console.log("Note created successfully:", newNote);
-
     return {
       message: "Successfully uploaded notes",
-      note: newNote,
     };
   } catch (error) {
-    console.error("Error in UploadNotesAction:", error);
     if (error instanceof Error) {
       return { error: error.message };
     } else {
