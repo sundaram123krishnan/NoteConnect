@@ -24,7 +24,6 @@ import {
   generatePermittedFileTypes,
 } from "uploadthing/client";
 import { UploadNotesAction } from "./upload-action";
-import { Caesar_Dressing } from "next/font/google";
 
 const NotesSchema = z.object({
   title: z.string().nonempty("Title is required"),
@@ -44,7 +43,7 @@ export function UploadNotes() {
   const [selectedCollege, setSelectedCollege] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
