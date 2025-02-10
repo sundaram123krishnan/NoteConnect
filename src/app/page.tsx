@@ -1,5 +1,6 @@
 import { Column, Heading } from "@/once-ui/components";
+import { AllNotes } from "./AllNotes";
 
 export default function Home() {
-  return <Heading as="h1">TODO</Heading>;
+  return <AllNotes />;
 }
