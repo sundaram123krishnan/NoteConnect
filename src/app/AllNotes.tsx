@@ -4,7 +4,7 @@ import prisma from "../../lib/prisma";
 export async function AllNotes() {
   const notes = await prisma.notes.findMany();
   return (
-    <Flex direction="column" gap="8">
+    <Flex direction="column" gap="8" zIndex={-1}>
       {notes.map((note, index) => (
         <Card
           key={index}

@@ -168,8 +168,9 @@ export default function RootLayout({
               position="relative"
               radius="xl"
               paddingX="s"
+              marginTop="l"
               fillWidth
-              zIndex={10}
+              zIndex={5}
               center
             >
               {children}
