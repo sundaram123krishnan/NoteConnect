@@ -3,7 +3,7 @@ import "@/once-ui/tokens/index.scss";
 
 import classNames from "classnames";
 import { headers } from "next/headers";
-import { Metadata } from "next";
+import { Metadata, Viewport } from "next";
 
 import {
   baseURL,
@@ -43,56 +43,99 @@ const tertiary: FontConfig | undefined = undefined;
 /*
  */
 
-export async function generateMetadata(): Promise<Metadata> {
-  const host = (await headers()).get("host");
-  const metadataBase = host ? new URL(`https://${host}`) : undefined;
+// export async function generateMetadata(): Promise<Metadata> {
+//   const host = (await headers()).get("host");
+//   const metadataBase = host ? new URL(`https://${host}`) : undefined;
 
-  return {
-    title: meta.title,
-    description: meta.description,
-    openGraph: {
-      title: og.title,
-      description: og.description,
-      url: "https://" + baseURL,
-      images: [
-        {
-          url: og.image,
-          alt: og.title,
-        },
-      ],
-      type: og.type as
-        | "website"
-        | "article"
-        | "book"
-        | "profile"
-        | "music.song"
-        | "music.album"
-        | "music.playlist"
-        | "music.radio_station"
-        | "video.movie"
-        | "video.episode"
-        | "video.tv_show"
-        | "video.other",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: og.title,
-      description: og.description,
-      images: [og.image],
-    },
-    metadataBase,
-  };
-}
+//   return {
+//     title: meta.title,
+//     description: meta.description,
+//     openGraph: {
+//       title: og.title,
+//       description: og.description,
+//       url: "https://" + baseURL,
+//       images: [
+//         {
+//           url: og.image,
+//           alt: og.title,
+//         },
+//       ],
+//       type: og.type as
+//         | "website"
+//         | "article"
+//         | "book"
+//         | "profile"
+//         | "music.song"
+//         | "music.album"
+//         | "music.playlist"
+//         | "music.radio_station"
+//         | "video.movie"
+//         | "video.episode"
+//         | "video.tv_show"
+//         | "video.other",
+//     },
+//     twitter: {
+//       card: "summary_large_image",
+//       title: og.title,
+//       description: og.description,
+//       images: [og.image],
+//     },
+//     metadataBase,
+//   };
+// }
 
-const schemaData = {
-  "@context": "https://schema.org",
-  "@type": schema.type,
-  url: "https://" + baseURL,
-  logo: schema.logo,
-  name: schema.name,
-  description: schema.description,
-  email: schema.email,
-  sameAs: Object.values(social).filter(Boolean),
+// const schemaData = {
+//   "@context": "https://schema.org",
+//   "@type": schema.type,
+//   url: "https://" + baseURL,
+//   logo: schema.logo,
+//   name: schema.name,
+//   description: schema.description,
+//   email: schema.email,
+//   sameAs: Object.values(social).filter(Boolean),
+// };
+const APP_NAME = "PWA App";
+const APP_DEFAULT_TITLE = "My Awesome PWA App";
+const APP_TITLE_TEMPLATE = "%s - PWA App";
+const APP_DESCRIPTION = "Best PWA app in the world!";
+
+export const metadata: Metadata = {
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -116,6 +159,7 @@ export default function RootLayout({
       data-surface={style.surface}
       data-transition={style.transition}
       data-scaling={style.scaling}
+      dir="ltr"
       className={classNames(
         primary.variable,
         code.variable,
@@ -123,14 +167,7 @@ export default function RootLayout({
         tertiary ? tertiary.variable : ""
       )}
     >
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schemaData),
-          }}
-        />
-      </head>
+      <head />
       <ToastProvider>
         <Column as="body" fillWidth margin="0" padding="0" vertical="center">
           <Background
