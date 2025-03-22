@@ -6,6 +6,7 @@ import {
   Column,
   Flex,
   Input,
+  Skeleton,
   Text,
 } from "@/once-ui/components";
 import type React from "react";
@@ -114,22 +115,59 @@ export default function SearchNotes() {
     setData(allNotes);
   }
 
+  const skeletonCards = [1, 2, 3];
+
   return (
     <Column fillWidth>
-      <Input
-        label="Search notes"
-        id="notes"
-        onChange={handleChange}
-        value={search}
-      />
-      {search && (
-        <Button variant="secondary" onClick={clearSearch}>
-          Clear
-        </Button>
-      )}
+      <Flex
+        fillWidth
+        gap="4"
+        align="center"
+        marginBottom="8"
+        horizontal="center"
+        vertical="center"
+        style={{ width: "100%" }} // Ensure the flex container maintains full width
+      >
+        <div style={{ width: "100%" }}>
+          <Input
+            label="Search notes"
+            id="notes"
+            onChange={handleChange}
+            value={search}
+            style={{ width: "100%" }}
+          />
+        </div>
+        {search && (
+          <Button variant="secondary" onClick={clearSearch}>
+            Clear
+          </Button>
+        )}
+      </Flex>
       <Flex direction="column" gap="8" align="start" fillWidth>
         {isLoading ? (
-          <Text>Loading...</Text>
+          skeletonCards.map((_, index) => (
+            <Card
+              key={`skeleton-${index}`}
+              radius="l-4"
+              direction="column"
+              gap="8"
+              padding="12"
+              fillHeight
+              fillWidth
+            >
+              <Skeleton shape="line" />
+
+              <Skeleton shape="line" />
+
+              <Flex gap="4">
+                <Skeleton shape="line" />
+                <Skeleton shape="line" />
+                <Skeleton shape="line" />
+              </Flex>
+
+              <Skeleton shape="line" />
+            </Card>
+          ))
         ) : data.length > 0 ? (
           data.map((note, index) => (
             <Card
@@ -139,7 +177,7 @@ export default function SearchNotes() {
               gap="8"
               padding="12"
               fillHeight
-              fillWidth // Ensure cards take full width
+              fillWidth
             >
               <Text variant="body-default-xl">{note.title}</Text>
               <Text variant="body-default-s" onBackground="neutral-weak">

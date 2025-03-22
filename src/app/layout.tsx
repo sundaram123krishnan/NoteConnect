@@ -169,7 +169,7 @@ export default function RootLayout({
     >
       <head />
       <ToastProvider>
-        <Column as="body" fillWidth margin="0" padding="0" vertical="center">
+        <Column as="body" fillWidth margin="0" padding="0" vertical="start">
           <Background
             position="absolute"
             mask={{
