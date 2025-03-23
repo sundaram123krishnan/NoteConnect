@@ -1,6 +1,6 @@
 {
-  "name": "FitSnap",
-  "short_name": "FitSnap",
+  "name": "NoteConnect - Share and Download Notes",
+  "short_name": "NoteConnect",
   "icons": [
     {
       "src": "/pwa/windows11/SmallTile.scale-100.png",

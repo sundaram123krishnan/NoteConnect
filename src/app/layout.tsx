@@ -94,10 +94,10 @@ const tertiary: FontConfig | undefined = undefined;
 //   email: schema.email,
 //   sameAs: Object.values(social).filter(Boolean),
 // };
-const APP_NAME = "PWA App";
-const APP_DEFAULT_TITLE = "My Awesome PWA App";
-const APP_TITLE_TEMPLATE = "%s - PWA App";
-const APP_DESCRIPTION = "Best PWA app in the world!";
+const APP_NAME = "NoteConnect";
+const APP_DEFAULT_TITLE = "NoteConnect - Share and Download Notes";
+const APP_TITLE_TEMPLATE = "NoteConnect";
+const APP_DESCRIPTION = "NoteConnect - Share and Download Notes";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
