@@ -10,10 +10,20 @@ import {
   Text,
 } from "@/once-ui/components";
 import type React from "react";
+import { useEffect, useState } from "react";
 
-import { useState } from "react";
+interface Note {
+  id: string;
+  title: string;
+  categories: string[];
+  college: string;
+  state: string;
+  district: string;
+  userId: string;
+  notesLink: string;
+}
 
-const allNotes = [
+const allNotes: Note[] = [
   {
     id: "cm6yziett0000sb2xj0ap5n0d",
     title: "Physics Class 12",
@@ -26,53 +36,44 @@ const allNotes = [
     notesLink:
       "https://utfs.io/a/8wa3a6isks/d5qt2MxcELzaPlq9NCKUT2kvfxn5VK1X7DB49bmaWcNsjgMh",
   },
-  {
-    id: "cm6z2t4340000sb1de2pqbpps",
-    title: "CNOS",
-    categories: ["OS", "CSE"],
-    college: "A.B.M. COLLEGE NAGPUR (Id: C-44544)",
-    state: "Maharashtra",
-    district: "Nagpur",
-    userId: "d0DYGbsF6YBlOs6pxWfWd17bFHprW5HY",
-    notesLink:
-      "https://utfs.io/a/8wa3a6isks/d5qt2MxcELzaFTbyQnIGPN1AH0a4ElOKt39Vpzqy7gJLkmjf",
-  },
-  {
-    id: "cm70kx6660000sb6xevxw4gt9",
-    title: "Physiotheraphy",
-    categories: ["Medical", "Physiotherapy"],
-    college: "Dr. Ulhas Patil College of Physiotherapy, Jalgaon (Id: C-14044)",
-    state: "Maharashtra",
-    district: "Jalgaon",
-    userId: "d0DYGbsF6YBlOs6pxWfWd17bFHprW5HY",
-    notesLink:
-      "https://utfs.io/a/8wa3a6isks/d5qt2MxcELzagmT0KRaY9dCyH8MghjQl32kbxvTiOA06WnfJ",
-  },
-  {
-    id: "cm70lrv150000sbiw6kei3zxk",
-    title: "Basics of Electronics",
-    categories: ["Engineering", "EXTC"],
-    college:
-      "Bhavik Vidya Prasark Mandals Jai Bhavani College Near Vitva Octoo Naka Vitava Kalwa Dist Thane (Id: C-34011)",
-    state: "Maharashtra",
-    district: "Thane",
-    userId: "d0DYGbsF6YBlOs6pxWfWd17bFHprW5HY",
-    notesLink:
-      "https://utfs.io/a/8wa3a6isks/d5qt2MxcELzaX5GYNLuID17HolZY4uBcpzJ8TrFKa0qtkhAb",
-  },
+  
 ];
 
 export default function SearchNotes() {
-  const [data, setData] = useState(allNotes);
-  const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState<Note[]>(allNotes);
+  const [search, setSearch] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/fetchNotes", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const fetchedData: Note[] = await response.json();
+        setData(fetchedData);
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+        setData(allNotes);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, []);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const newSearchValue = event.target.value;
     setSearch(newSearchValue);
 
     if (!newSearchValue || newSearchValue.trim().length <= 1) {
-      setData(allNotes);
+      setIsLoading(true);
+      fetchNotes();
       return;
     }
 
@@ -83,8 +84,26 @@ export default function SearchNotes() {
     return () => clearTimeout(timeoutId);
   }
 
+  async function fetchNotes() {
+    try {
+      const response = await fetch("/api/fetchNotes", {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const fetchedData: Note[] = await response.json();
+      setData(fetchedData);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      setData(allNotes);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function FilterNotes(searchValue: string) {
-    if (!searchValue || searchValue.trim() === "") {
+    if (!searchValue.trim()) {
       setData(allNotes);
       return;
     }
@@ -93,6 +112,9 @@ export default function SearchNotes() {
     try {
       const response = await fetch("/api/filterNotes", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ search: searchValue }),
       });
 
@@ -100,7 +122,7 @@ export default function SearchNotes() {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      const responseData = await response.json();
+      const responseData: Note[] = await response.json();
       setData(responseData);
     } catch (error) {
       console.error("Error filtering notes:", error);
@@ -112,31 +134,22 @@ export default function SearchNotes() {
 
   function clearSearch() {
     setSearch("");
-    setData(allNotes);
+    setIsLoading(true);
+    fetchNotes();
   }
 
   const skeletonCards = [1, 2, 3];
 
   return (
     <Column fillWidth>
-      <Flex
-        fillWidth
-        gap="4"
-        align="center"
-        marginBottom="8"
-        horizontal="center"
-        vertical="center"
-        style={{ width: "100%" }} // Ensure the flex container maintains full width
-      >
-        <div style={{ width: "100%" }}>
-          <Input
-            label="Search notes"
-            id="notes"
-            onChange={handleChange}
-            value={search}
-            style={{ width: "100%" }}
-          />
-        </div>
+      <Flex fillWidth gap="4" align="center" marginBottom="8">
+        <Input
+          label="Search notes"
+          id="notes"
+          onChange={handleChange}
+          value={search}
+          style={{ width: "100%" }}
+        />
         {search && (
           <Button variant="secondary" onClick={clearSearch}>
             Clear
@@ -147,7 +160,7 @@ export default function SearchNotes() {
         {isLoading ? (
           skeletonCards.map((_, index) => (
             <Card
-              key={`skeleton-${index}`}
+              key={index}
               radius="l-4"
               direction="column"
               gap="8"
@@ -156,22 +169,19 @@ export default function SearchNotes() {
               fillWidth
             >
               <Skeleton shape="line" />
-
               <Skeleton shape="line" />
-
               <Flex gap="4">
                 <Skeleton shape="line" />
                 <Skeleton shape="line" />
                 <Skeleton shape="line" />
               </Flex>
-
               <Skeleton shape="line" />
             </Card>
           ))
         ) : data.length > 0 ? (
-          data.map((note, index) => (
+          data.map((note) => (
             <Card
-              key={note.id || index}
+              key={note.id}
               radius="l-4"
               direction="column"
               gap="8"

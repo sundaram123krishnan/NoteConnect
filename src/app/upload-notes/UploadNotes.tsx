@@ -24,6 +24,7 @@ import {
   generatePermittedFileTypes,
 } from "uploadthing/client";
 import { UploadNotesAction } from "./upload-action";
+import { useRouter } from "next/navigation";
 
 const NotesSchema = z.object({
   title: z.string().nonempty("Title is required"),
@@ -49,7 +50,10 @@ export function UploadNotes() {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<z.ZodIssue[]>([]);
 
+  const router = useRouter();
   async function fetchColleges(state: string, district: string) {
+
+
     const response = await fetch(
       `https://api.data.gov.in/resource/44bea382-c525-4740-8a07-04bd20a99b52?api-key=579b464db66ec23bdd000001b5724e0b5e5440d86288ad2a5d8cb40b&format=json&limit=5000&filters%5Bstate_name%5D=${state}&filters%5Bdistrict_name%5D=${district}`
     );
@@ -131,6 +135,7 @@ export function UploadNotes() {
           message: "Successfully uploaded notes",
           variant: "success",
         });
+        router.push("/");
         setState("");
         setDistrict("");
         setSelectedCollege("");
@@ -200,7 +205,6 @@ export function UploadNotes() {
           padding="16"
           height={44}
           fillWidth
-          background="transparent"
           border="transparent"
         >
           <Flex direction="row" gap="4" horizontal="space-between" center>

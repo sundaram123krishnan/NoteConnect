@@ -1,4 +1,4 @@
-import { UserMenu, Flex } from "@/once-ui/components";
+import { UserMenu, Flex, Button, Column } from "@/once-ui/components";
 import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
 import LogoutButton from "./Logout";
@@ -16,11 +16,12 @@ export default async function UserProfile() {
         empty: image !== undefined ? false : true,
       }}
       dropdown={
-        <>
-          <Flex padding="2" fillWidth>
+        <Column>
+          <Flex direction="column" gap="4" padding="4" background="transparent" >
             <LogoutButton />
+            <Button href="/upload-notes">Upload Notes</Button>
           </Flex>
-        </>
+        </Column>
       }
     />
   );
