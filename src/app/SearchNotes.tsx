@@ -14,6 +14,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { FaHeart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
+import { authClient } from "../../lib/auth-client";
 
 interface Note {
   id: string;
@@ -47,8 +48,35 @@ export default function SearchNotes() {
   const [data, setData] = useState<Note[]>(allNotes);
   const [search, setSearch] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [liked, setLiked] = useState<boolean>(false);
+  const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>("");
   const { addToast } = useToast();
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: session } = await authClient.getSession();
+      if (session) {
+        setIsAuthenticated(true);
+        setCurrentUserId(session.user.id);
+        console.log(currentUserId);
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUserId(null);
+        setLikedNotes(new Set());
+        localStorage.removeItem("likedNotes");
+      }
+    };
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    // Load liked notes from localStorage
+    const storedLikes = localStorage.getItem("likedNotes");
+    if (storedLikes) {
+      setLikedNotes(new Set(JSON.parse(storedLikes)));
+    }
+  }, []);
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -139,21 +167,35 @@ export default function SearchNotes() {
   }
 
   async function handleLikes(noteId: string, userId: string) {
-    if (liked) {
+    // Check if user is authenticated
+    if (!isAuthenticated || !currentUserId) {
       addToast({
         variant: "danger",
-        message: "Alread liked the note",
+        message: "Please sign in to like notes",
       });
       return;
     }
-    setLiked(true);
+
+    if (likedNotes.has(noteId)) {
+      addToast({
+        variant: "danger",
+        message: "Already liked this note",
+      });
+      return;
+    }
+
+    // Add this note to the liked set and save to localStorage
+    const newLikedNotes = new Set([...likedNotes, noteId]);
+    setLikedNotes(newLikedNotes);
+    localStorage.setItem("likedNotes", JSON.stringify([...newLikedNotes]));
+
     try {
       const response = await fetch("/api/fetchNotes", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ noteId, userId }),
+        body: JSON.stringify({ noteId, userId: currentUserId }),
       });
 
       if (!response.ok) {
@@ -181,6 +223,14 @@ export default function SearchNotes() {
       console.log("Updated likes:", updatedNote);
     } catch (error) {
       console.error("Error updating likes:", error);
+      // If there's an error, remove the note from liked set and localStorage
+      const updatedLikedNotes = new Set(likedNotes);
+      updatedLikedNotes.delete(noteId);
+      setLikedNotes(updatedLikedNotes);
+      localStorage.setItem(
+        "likedNotes",
+        JSON.stringify([...updatedLikedNotes])
+      );
     }
   }
 
@@ -257,8 +307,9 @@ export default function SearchNotes() {
                   variant="primary"
                   className="p-4"
                   onClick={() => handleLikes(note.id, note.userId)}
+                  title={!isAuthenticated ? "Sign in to like notes" : ""}
                 >
-                  <FaRegHeart />
+                  {likedNotes.has(note.id) ? <FaHeart /> : <FaRegHeart />}
                   {note.likeCount}
                 </Button>
               </Flex>
