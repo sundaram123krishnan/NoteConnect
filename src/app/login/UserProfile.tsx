@@ -17,9 +17,10 @@ export default async function UserProfile() {
       }}
       dropdown={
         <Column>
-          <Flex direction="column" gap="4" padding="4" background="transparent" >
+          <Flex direction="column" gap="4" padding="4" background="transparent">
             <LogoutButton />
             <Button href="/upload-notes">Upload Notes</Button>
+            <Button href="/bookmark">Bookmarks</Button>
           </Flex>
         </Column>
       }

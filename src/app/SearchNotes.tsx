@@ -14,6 +14,8 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { FaHeart } from "react-icons/fa";
 import { FaRegHeart } from "react-icons/fa";
+import { FaBookmark } from "react-icons/fa";
+import { FaRegBookmark } from "react-icons/fa";
 import { authClient } from "../../lib/auth-client";
 
 interface Note {
@@ -49,6 +51,9 @@ export default function SearchNotes() {
   const [search, setSearch] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
+  const [bookmarkedNotes, setBookmarkedNotes] = useState<Set<string>>(
+    new Set()
+  );
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>("");
   const { addToast } = useToast();
@@ -59,12 +64,13 @@ export default function SearchNotes() {
       if (session) {
         setIsAuthenticated(true);
         setCurrentUserId(session.user.id);
-        console.log(currentUserId);
       } else {
         setIsAuthenticated(false);
         setCurrentUserId(null);
         setLikedNotes(new Set());
+        setBookmarkedNotes(new Set());
         localStorage.removeItem("likedNotes");
+        localStorage.removeItem("bookmarkedNotes");
       }
     };
     fetchSession();
@@ -75,6 +81,12 @@ export default function SearchNotes() {
     const storedLikes = localStorage.getItem("likedNotes");
     if (storedLikes) {
       setLikedNotes(new Set(JSON.parse(storedLikes)));
+    }
+
+    // Load bookmarked notes from localStorage
+    const storedBookmarks = localStorage.getItem("bookmarkedNotes");
+    if (storedBookmarks) {
+      setBookmarkedNotes(new Set(JSON.parse(storedBookmarks)));
     }
   }, []);
 
@@ -234,6 +246,78 @@ export default function SearchNotes() {
     }
   }
 
+  async function handleBookMark(noteId: string) {
+    if (!isAuthenticated || !currentUserId) {
+      addToast({
+        variant: "danger",
+        message: "Please sign in to bookmark notes",
+      });
+      return;
+    }
+
+    if (bookmarkedNotes.has(noteId)) {
+      addToast({
+        variant: "danger",
+        message: "You have already bookmarked this note",
+      });
+      return;
+    }
+
+    const newBookmarkedNotes = new Set([...bookmarkedNotes, noteId]);
+    setBookmarkedNotes(newBookmarkedNotes);
+    localStorage.setItem(
+      "bookmarkedNotes",
+      JSON.stringify([...newBookmarkedNotes])
+    );
+
+    const bookmark = {
+      noteId,
+      userId: currentUserId,
+    };
+
+    console.log(bookmark);
+
+    try {
+      const res = await fetch("/api/bookmark", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookmark),
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      if (res.ok) {
+        addToast({
+          variant: "success",
+          message: "Note bookmarked successfully",
+        });
+      } else {
+        addToast({
+          variant: "danger",
+          message: "The note is already bookmarked",
+        });
+      }
+    } catch (error) {
+      console.error("Error bookmarking note:", error);
+      // If there's an error, remove the note from bookmarked set and localStorage
+      const updatedBookmarkedNotes = new Set(bookmarkedNotes);
+      updatedBookmarkedNotes.delete(noteId);
+      setBookmarkedNotes(updatedBookmarkedNotes);
+      localStorage.setItem(
+        "bookmarkedNotes",
+        JSON.stringify([...updatedBookmarkedNotes])
+      );
+
+      addToast({
+        variant: "danger",
+        message: "The note is already bookmarked",
+      });
+    }
+  }
+
   function clearSearch() {
     setSearch("");
     setIsLoading(true);
@@ -300,18 +384,36 @@ export default function SearchNotes() {
                   <Badge key={index}>{category}</Badge>
                 ))}
               </Flex>
-              <Flex direction="row" gap="4" align="center">
+              <Flex direction="row" gap="4" horizontal="space-between">
                 <Button href={note.notesLink}>Download PDF</Button>
-                <Button
-                  size="m"
-                  variant="primary"
-                  className="p-4"
-                  onClick={() => handleLikes(note.id, note.userId)}
-                  title={!isAuthenticated ? "Sign in to like notes" : ""}
-                >
-                  {likedNotes.has(note.id) ? <FaHeart /> : <FaRegHeart />}
-                  {note.likeCount}
-                </Button>
+                <Flex gap="4" direction="row">
+                  <Button
+                    size="m"
+                    variant="primary"
+                    className="p-4"
+                    onClick={() => handleLikes(note.id, note.userId)}
+                    title={!isAuthenticated ? "Sign in to like notes" : ""}
+                  >
+                    <Flex direction="row" gap="4" align="center">
+                      {likedNotes.has(note.id) ? <FaHeart /> : <FaRegHeart />}
+                      {note.likeCount}
+                    </Flex>
+                  </Button>
+
+                  <Button
+                    size="m"
+                    variant="secondary"
+                    className="p-4"
+                    onClick={() => handleBookMark(note.id)}
+                    title={!isAuthenticated ? "Sign in to bookmark notes" : ""}
+                  >
+                    {bookmarkedNotes.has(note.id) ? (
+                      <FaBookmark />
+                    ) : (
+                      <FaRegBookmark />
+                    )}
+                  </Button>
+                </Flex>
               </Flex>
             </Card>
           ))

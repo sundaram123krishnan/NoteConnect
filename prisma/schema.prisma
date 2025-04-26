@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String     @id
   name          String
   email         String
   emailVerified Boolean
@@ -20,6 +20,7 @@ model User {
   accounts      Account[]
   notes         Notes[]
   Like          Like[]
+  Bookmark      Bookmark[]
 
   @@unique([email])
   @@map("user")
@@ -71,17 +72,18 @@ model Verification {
 }
 
 model Notes {
-  id         String   @id @default(cuid())
+  id         String     @id @default(cuid())
   title      String
   categories String[]
   college    String
   state      String
   district   String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
   userId     String
   notesLink  String
   likes      Like[]
-  likeCount  Int      @default(0)
+  likeCount  Int        @default(0)
+  Bookmark   Bookmark[]
 
   @@map("notes")
 }
@@ -92,4 +94,14 @@ model Like {
   notes   Notes  @relation(fields: [notesId], references: [id])
   userId  String
   user    User   @relation(fields: [userId], references: [id])
+}
+
+model Bookmark {
+  id     String @id @default(cuid())
+  noteId String
+  note   Notes  @relation(fields: [noteId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([noteId, userId]) 
 }
