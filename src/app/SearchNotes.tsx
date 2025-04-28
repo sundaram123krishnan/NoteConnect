@@ -17,7 +17,6 @@ import { FaRegHeart } from "react-icons/fa";
 import { FaBookmark } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa";
 import { authClient } from "../../lib/auth-client";
-
 interface Note {
   id: string;
   title: string;
@@ -29,7 +28,6 @@ interface Note {
   notesLink: string;
   likeCount: number;
 }
-
 const allNotes: Note[] = [
   {
     id: "cm6yziett0000sb2xj0ap5n0d",
@@ -58,6 +56,29 @@ export default function SearchNotes() {
   const [currentUserId, setCurrentUserId] = useState<string | null>("");
   const { addToast } = useToast();
 
+  // Helper functions for localStorage with user-specific keys
+  const getUserSpecificKey = (
+    baseKey: string,
+    userId: string | null
+  ): string => {
+    return userId ? `${baseKey}_${userId}` : baseKey;
+  };
+
+  const saveToLocalStorage = (baseKey: string, data: any) => {
+    if (!currentUserId) return;
+
+    const userSpecificKey = getUserSpecificKey(baseKey, currentUserId);
+    localStorage.setItem(userSpecificKey, JSON.stringify(data));
+  };
+
+  const loadFromLocalStorage = (baseKey: string): any => {
+    if (!currentUserId) return null;
+
+    const userSpecificKey = getUserSpecificKey(baseKey, currentUserId);
+    const storedData = localStorage.getItem(userSpecificKey);
+    return storedData ? JSON.parse(storedData) : null;
+  };
+
   useEffect(() => {
     const fetchSession = async () => {
       const { data: session } = await authClient.getSession();
@@ -69,26 +90,27 @@ export default function SearchNotes() {
         setCurrentUserId(null);
         setLikedNotes(new Set());
         setBookmarkedNotes(new Set());
-        localStorage.removeItem("likedNotes");
-        localStorage.removeItem("bookmarkedNotes");
       }
     };
     fetchSession();
   }, []);
 
+  // Load user-specific data after currentUserId is set
   useEffect(() => {
-    // Load liked notes from localStorage
-    const storedLikes = localStorage.getItem("likedNotes");
-    if (storedLikes) {
-      setLikedNotes(new Set(JSON.parse(storedLikes)));
-    }
+    if (currentUserId) {
+      // Load liked notes for this specific user
+      const storedLikes = loadFromLocalStorage("likedNotes");
+      if (storedLikes) {
+        setLikedNotes(new Set(storedLikes));
+      }
 
-    // Load bookmarked notes from localStorage
-    const storedBookmarks = localStorage.getItem("bookmarkedNotes");
-    if (storedBookmarks) {
-      setBookmarkedNotes(new Set(JSON.parse(storedBookmarks)));
+      // Load bookmarked notes for this specific user
+      const storedBookmarks = loadFromLocalStorage("bookmarkedNotes");
+      if (storedBookmarks) {
+        setBookmarkedNotes(new Set(storedBookmarks));
+      }
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -109,24 +131,20 @@ export default function SearchNotes() {
         setIsLoading(false);
       }
     };
-
     fetchNotes();
   }, []);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const newSearchValue = event.target.value;
     setSearch(newSearchValue);
-
     if (!newSearchValue || newSearchValue.trim().length <= 1) {
       setIsLoading(true);
       fetchNotes();
       return;
     }
-
     const timeoutId = setTimeout(() => {
       FilterNotes(newSearchValue);
     }, 300);
-
     return () => clearTimeout(timeoutId);
   }
 
@@ -153,7 +171,6 @@ export default function SearchNotes() {
       setData(allNotes);
       return;
     }
-
     setIsLoading(true);
     try {
       const response = await fetch("/api/filterNotes", {
@@ -163,11 +180,9 @@ export default function SearchNotes() {
         },
         body: JSON.stringify({ search: searchValue }),
       });
-
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const responseData: Note[] = await response.json();
       setData(responseData);
     } catch (error) {
@@ -196,10 +211,12 @@ export default function SearchNotes() {
       return;
     }
 
-    // Add this note to the liked set and save to localStorage
+    // Add this note to the liked set
     const newLikedNotes = new Set([...likedNotes, noteId]);
     setLikedNotes(newLikedNotes);
-    localStorage.setItem("likedNotes", JSON.stringify([...newLikedNotes]));
+
+    // Save to localStorage with user-specific key
+    saveToLocalStorage("likedNotes", [...newLikedNotes]);
 
     try {
       const response = await fetch("/api/fetchNotes", {
@@ -215,7 +232,6 @@ export default function SearchNotes() {
       }
 
       const updatedNote = await response.json();
-
       const res = await fetch("/api/likeCount", {
         method: "POST",
         headers: {
@@ -226,6 +242,7 @@ export default function SearchNotes() {
 
       const totalLikes = await res.json();
       console.log(totalLikes);
+
       setData((prevData) =>
         prevData.map((note) =>
           note.id === noteId ? { ...note, likeCount: totalLikes } : note
@@ -235,14 +252,14 @@ export default function SearchNotes() {
       console.log("Updated likes:", updatedNote);
     } catch (error) {
       console.error("Error updating likes:", error);
-      // If there's an error, remove the note from liked set and localStorage
+
+      // If there's an error, remove the note from liked set
       const updatedLikedNotes = new Set(likedNotes);
       updatedLikedNotes.delete(noteId);
       setLikedNotes(updatedLikedNotes);
-      localStorage.setItem(
-        "likedNotes",
-        JSON.stringify([...updatedLikedNotes])
-      );
+
+      // Update localStorage with the corrected set
+      saveToLocalStorage("likedNotes", [...updatedLikedNotes]);
     }
   }
 
@@ -265,10 +282,9 @@ export default function SearchNotes() {
 
     const newBookmarkedNotes = new Set([...bookmarkedNotes, noteId]);
     setBookmarkedNotes(newBookmarkedNotes);
-    localStorage.setItem(
-      "bookmarkedNotes",
-      JSON.stringify([...newBookmarkedNotes])
-    );
+
+    // Save to localStorage with user-specific key
+    saveToLocalStorage("bookmarkedNotes", [...newBookmarkedNotes]);
 
     const bookmark = {
       noteId,
@@ -302,14 +318,14 @@ export default function SearchNotes() {
       }
     } catch (error) {
       console.error("Error bookmarking note:", error);
-      // If there's an error, remove the note from bookmarked set and localStorage
+
+      // If there's an error, remove the note from bookmarked set
       const updatedBookmarkedNotes = new Set(bookmarkedNotes);
       updatedBookmarkedNotes.delete(noteId);
       setBookmarkedNotes(updatedBookmarkedNotes);
-      localStorage.setItem(
-        "bookmarkedNotes",
-        JSON.stringify([...updatedBookmarkedNotes])
-      );
+
+      // Update localStorage with the corrected set
+      saveToLocalStorage("bookmarkedNotes", [...updatedBookmarkedNotes]);
 
       addToast({
         variant: "danger",
