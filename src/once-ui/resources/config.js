@@ -2,17 +2,18 @@ const baseURL = "demo.once-ui.com";
 
 // default customization applied to the HTML in the main layout.tsx
 const style = {
-  theme: "light", // dark | light
-  neutral: "slate", // sand | gray | slate
-  brand: "indigo", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
-  accent: "violet", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan
-  solid: "contrast", // color | contrast | inverse
-  solidStyle: "flat", // flat | plastic
-  border: "conservative", // rounded | playful | conservative
-  surface: "translucent", // filled | translucent
-  transition: "all", // all | micro | macro
-  scaling: "100", // 90 | 95 | 100 | 105 | 110
+  theme: "dark",
+  neutral: "gray",
+  brand: "indigo",
+  accent: "cyan",
+  solid: "contrast",
+  solidStyle: "flat",
+  border: "conservative",
+  surface: "filled",
+  transition: "micro",
+  scaling: "95",
 };
+
 
 // default metadata
 const meta = {
